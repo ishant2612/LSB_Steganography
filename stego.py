@@ -1,16 +1,13 @@
 #!/usr/bin/python3
 
 from stegano import lsb
-import argparse
-import sys
 import random
 import re
-import time
 
 def embed_message(input_image, message, password=None):
     if not input_image.endswith('.png'):
         print("Error: Please provide a PNG image file.")
-        sys.exit(1)
+        return
 
     if not password:
         password = "no_password_given"
@@ -21,48 +18,47 @@ def embed_message(input_image, message, password=None):
     output_filename = f"secret{random_number}.png"
     secret.save(output_filename)
     print("File Saved as", output_filename)
-    time.sleep(4)
 
 def extract_message(input_image, password):
     if not input_image.endswith('.png'):
         print("Error: Please provide a PNG image file.")
-        sys.exit(1)
+        return
 
     if not password:
         print("Error: Please provide a password.")
-        sys.exit(1)
+        return
 
     try:
         message = lsb.reveal(input_image)
         if password in message:
             extracted_message = message.replace(password, "")
             print("The secret Message is", extracted_message)
-            time.sleep(4)
         else:
             print("Error: Couldn't reveal the message with the provided password.")
     except Exception as e:
         print("Error:", e)
 
+def main():
+    while True:
+        print("\nEnter 'exit' to quit the program.")
+        task = input("Enter 'embed' to embed a message or 'extract' to extract a message: ").lower()
+
+        if task == 'exit':
+            break
+
+        if task not in ['embed', 'extract']:
+            print("Invalid input. Please enter 'embed' or 'extract'.")
+            continue
+
+        file_path = input("Enter the file path of the PNG image: ")
+
+        if task == 'embed':
+            message = input("Enter the message to embed: ")
+            password = input("Enter the password (optional): ")
+            embed_message(file_path, message, password)
+        elif task == 'extract':
+            password = input("Enter the password: ")
+            extract_message(file_path, password)
+
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Image Steganography\n[+] Use .png files only")
-    parser.add_argument('-f', help="Input .png image file")
-    parser.add_argument('-e', help="Embed a message in the image")
-    parser.add_argument('-x', action="store_true", help="Extract the message from the image")
-    parser.add_argument('-p', nargs="?", const="no_password_given", help="Optional password")
-    args = parser.parse_args()
-
-    if not args.f:
-        print("Error: Please provide an input image file.")
-        sys.exit(1)
-
-    if args.e and args.x:
-        print("Error: Choose either embedding (-e) or extraction (-x), not both.")
-        sys.exit(1)
-
-    if args.e:
-        embed_message(args.f, args.e, args.p)
-    elif args.x:
-        extract_message(args.f, args.p)
-    else:
-        print("Error: Choose either embedding (-e) or extraction (-x).")
-        sys.exit(1)
+    main()
